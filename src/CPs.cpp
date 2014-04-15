@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
 
 #define COLOR_YELLOW "[33m"
 #define COLOR_GREEN  "[32m"

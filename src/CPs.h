@@ -4,38 +4,29 @@
 #include <CComposite.h>
 #include <CChild.h>
 #include <CAutoPtr.h>
+#include <memory>
 #include <string>
 
 class CPs;
 
 struct CPsProcessData {
-  int         pid;
-  int         ppid;
+  int         pid  { -1 };
+  int         ppid { -1 };
   std::string owner;
   std::string command;
   std::string args;
 };
 
-class CPsProcess : public CComposite<CPsProcess, CPsProcess>,
-                   public CChild<CPsProcess> {
+class CPsProcess : public CComposite<CPsProcess, CPsProcess>, public CChild<CPsProcess> {
  private:
   typedef CComposite<CPsProcess, CPsProcess> Composite;
   typedef CChild<CPsProcess>                 ProcessChild;
 
-  CPsProcessData data_;
-
  public:
   CPsProcess(int pid, int ppid, const std::string &owner,
-             const std::string &command, const std::string &args) :
-   Composite(this) {
-    data_.pid     = pid;
-    data_.ppid    = ppid;
-    data_.owner   = owner;
-    data_.command = command;
-    data_.args    = args;
-  }
+             const std::string &command, const std::string &args);
 
-  virtual ~CPsProcess() { }
+  virtual ~CPsProcess();
 
   int getPid () const { return data_.pid ; }
   int getPPid() const { return data_.ppid; }
@@ -73,19 +64,26 @@ class CPsProcess : public CComposite<CPsProcess, CPsProcess>,
   void kill();
 
   void killChildren();
+
+ private:
+  CPsProcessData data_;
 };
 
-class CPsRootProcess : public CPsProcess {
- private:
-  CPs *ps_;
+//------
 
+class CPsRootProcess : public CPsProcess {
  public:
   CPsRootProcess(CPs *ps) :
    CPsProcess(0, 0, "root", "", ""), ps_(ps) {
   }
 
   CPs *getParentPs() const { return ps_; }
+
+ private:
+  CPs *ps_ { nullptr };
 };
+
+//------
 
 class CPs {
  private:
@@ -106,6 +104,7 @@ class CPs {
 
  public:
   CPs();
+ ~CPs();
 
   const std::string &getUser() const { return user_; }
 
@@ -128,7 +127,7 @@ class CPs {
 
   void setColor(bool color) { color_ = color; }
 
-  CPsRootProcess *getRootProcess() const { return root_process_; }
+  CPsRootProcess *getRootProcess() const { return root_process_.get(); }
 
   void loadProcesses(bool hier=false);
 
@@ -143,14 +142,16 @@ class CPs {
   bool filterProcess(CPsProcess *process);
 
  private:
-  std::string              user_;
-  int                      user_pid_;
-  int                      depth_;
-  bool                     show_head_;
-  bool                     show_tail_;
-  bool                     color_;
-  CAutoPtr<CPsRootProcess> root_process_;
-  std::string              ps_command_;
+  using RootProcessP = std::unique_ptr<CPsRootProcess>;
+
+  std::string  user_;
+  int          user_pid_;
+  int          depth_     { 0 };
+  bool         show_head_ { false };
+  bool         show_tail_ { false };
+  bool         color_     { true };
+  RootProcessP root_process_;
+  std::string  ps_command_;
 };
 
 #endif

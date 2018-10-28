@@ -1,22 +1,23 @@
 #include <CPs.h>
 #include <CStrUtil.h>
 
+#include <std_os.h>
+
 #include <vector>
 #include <map>
 #include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <sys/types.h>
-#include <signal.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define COLOR_YELLOW "[33m"
 #define COLOR_GREEN  "[32m"
 #define COLOR_NONE   "[0m"
 
 CPs::
-CPs() :
- depth_(0), show_head_(false), show_tail_(false), color_(true), root_process_(NULL)
+CPs()
 {
   user_     = getenv("USER");
   user_pid_ = getpid();
@@ -32,11 +33,16 @@ CPs() :
 #endif
 }
 
+CPs::
+~CPs()
+{
+}
+
 void
 CPs::
 loadProcesses(bool hier)
 {
-  root_process_ = new CPsRootProcess(this);
+  root_process_ = std::make_unique<CPsRootProcess>(this);
 
   typedef std::vector<CPsProcess *>  ProcessList;
   typedef std::map<int,CPsProcess *> ProcessMap;
@@ -58,11 +64,13 @@ loadProcesses(bool hier)
       if (line_num > 0) {
         CPsProcess *process = processLine(line);
 
-        if (process != NULL && filterProcess(process)) {
+        if (process && filterProcess(process)) {
           processes[process->getPid()] = process;
 
           pid_processes[process->getPPid()].push_back(process);
         }
+        else
+          delete process;
       }
 
       ++line_num;
@@ -314,6 +322,28 @@ operator()(CPsProcess *process1, CPsProcess *process2)
 
 //----------
 
+CPsProcess::
+CPsProcess(int pid, int ppid, const std::string &owner,
+           const std::string &command, const std::string &args) :
+ Composite(this)
+{
+  data_.pid     = pid;
+  data_.ppid    = ppid;
+  data_.owner   = owner;
+  data_.command = command;
+  data_.args    = args;
+}
+
+CPsProcess::
+~CPsProcess()
+{
+  child_iterator p1 = child_begin();
+  child_iterator p2 = child_end  ();
+
+  for ( ; p1 != p2; ++p1)
+    delete *p1;
+}
+
 void
 CPsProcess::
 print() const
@@ -352,7 +382,7 @@ print() const
     printf("%s", getCommand().c_str());
 
     if (getArgs().size() > 0)
-      printf("%s", getArgs().c_str());
+      printf(" %s", getArgs().c_str());
 
     printf("\n");
   }

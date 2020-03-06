@@ -3,7 +3,6 @@
 
 #include <CComposite.h>
 #include <CChild.h>
-#include <CAutoPtr.h>
 #include <memory>
 #include <string>
 

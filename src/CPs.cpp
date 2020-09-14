@@ -44,9 +44,9 @@ loadProcesses(bool hier)
 {
   root_process_ = std::make_unique<CPsRootProcess>(this);
 
-  typedef std::vector<CPsProcess *>  ProcessList;
-  typedef std::map<int,CPsProcess *> ProcessMap;
-  typedef std::map<int,ProcessList>  PIdProcessList;
+  using ProcessList    = std::vector<CPsProcess *>;
+  using ProcessMap     = std::map<int,CPsProcess *>;
+  using PIdProcessList = std::map<int,ProcessList>;
 
   ProcessMap     processes;
   PIdProcessList pid_processes;
@@ -62,7 +62,7 @@ loadProcesses(bool hier)
   while ((c = fgetc(fp)) != EOF) {
     if (c == '\n') {
       if (line_num > 0) {
-        CPsProcess *process = processLine(line);
+        auto *process = processLine(line);
 
         if (process && filterProcess(process)) {
           processes[process->getPid()] = process;
@@ -86,13 +86,11 @@ loadProcesses(bool hier)
   //-------
 
   if (hier) {
-    PIdProcessList::const_iterator p1 = pid_processes.begin();
-    PIdProcessList::const_iterator p2 = pid_processes.end  ();
+    for (const auto &pid_process : pid_processes) {
+      int         pid         = pid_process.first;
+      const auto &processList = pid_process.second;
 
-    for ( ; p1 != p2; ++p1) {
-      int pid = (*p1).first;
-
-      ProcessMap::const_iterator p = processes.find(pid);
+      auto p = processes.find(pid);
 
       CPsProcess *pprocess;
 
@@ -101,36 +99,27 @@ loadProcesses(bool hier)
       else
         pprocess = getRootProcess();
 
-      ProcessList::const_iterator p3 = (*p1).second.begin();
-      ProcessList::const_iterator p4 = (*p1).second.end  ();
-
-      for ( ; p3 != p4; ++p3)
-        pprocess->add_child(*p3);
+      for (const auto &process : processList)
+        pprocess->add_child(process);
     }
 
-    ProcessMap::const_iterator p3 = processes.begin();
-    ProcessMap::const_iterator p4 = processes.end  ();
-
-    for ( ; p3 != p4; ++p3) {
-      CPsProcess *process = (*p3).second;
+    for (const auto &p : processes) {
+      auto *process = p.second;
 
       std::sort(process->child_begin(), process->child_end(), ProcessCmp1());
     }
   }
   else {
-    ProcessMap::const_iterator p1 = processes.begin();
-    ProcessMap::const_iterator p2 = processes.end  ();
+    auto *pprocess = getRootProcess();
 
-    for ( ; p1 != p2; ++p1) {
-      CPsProcess *pprocess = getRootProcess();
+    for (const auto &p : processes) {
+      auto *process = p.second;
 
-      pprocess->add_child((*p1).second);
+      pprocess->add_child(process);
     }
   }
 
-  sort(getRootProcess()->child_begin(),
-       getRootProcess()->child_end(),
-       ProcessCmp1());
+  sort(getRootProcess()->child_begin(), getRootProcess()->child_end(), ProcessCmp1());
 }
 
 CPsProcess *
@@ -218,7 +207,7 @@ processLine(const std::string &line)
       args += line[i++];
   }
 
-  CPsProcess *process = new CPsProcess(pid, ppid, owner, command, args);
+  auto *process = new CPsProcess(pid, ppid, owner, command, args);
 
   return process;
 }
@@ -241,11 +230,8 @@ printProcesses()
 {
   depth_ = 0;
 
-  CPsProcess::const_child_iterator p1 = getRootProcess()->child_begin();
-  CPsProcess::const_child_iterator p2 = getRootProcess()->child_end  ();
-
-  for ( ; p1 != p2; ++p1)
-    (*p1)->print();
+  for (const auto &child : getRootProcess()->children())
+    child->print();
 }
 
 bool
@@ -254,32 +240,29 @@ killProcess(const std::string &name, bool kill_all, bool recursive, bool force_k
 {
   int my_pid = getpid();
 
-  CPsProcess *process = NULL;
+  CPsProcess *process = nullptr;
 
   uint num_matched = 0;
 
-  CPsProcess::const_child_iterator p1 = getRootProcess()->child_begin();
-  CPsProcess::const_child_iterator p2 = getRootProcess()->child_end  ();
-
-  for ( ; p1 != p2; ++p1) {
-    if ((*p1)->getPid() == my_pid) // can kill myself
+  for (const auto &child : getRootProcess()->children()) {
+    if (child->getPid() == my_pid) // can kill myself
       continue;
 
-    std::string name1 = (*p1)->getCommand();
+    auto name1 = child->getCommand();
 
-    std::string::size_type pos = name1.rfind('/');
+    auto pos = name1.rfind('/');
 
     if (pos != std::string::npos)
       name1 = name1.substr(pos + 1);
 
     if (name1 == name) {
-      process = *p1;
+      process = child;
 
       if (kill_all) {
         if (recursive)
-          (*p1)->killChildren();
+          child->killChildren();
 
-        (*p1)->kill();
+        child->kill();
       }
 
       ++num_matched;
@@ -337,11 +320,8 @@ CPsProcess(int pid, int ppid, const std::string &owner,
 CPsProcess::
 ~CPsProcess()
 {
-  child_iterator p1 = child_begin();
-  child_iterator p2 = child_end  ();
-
-  for ( ; p1 != p2; ++p1)
-    delete *p1;
+  for (auto &child : children())
+    delete child;
 }
 
 void
@@ -389,11 +369,8 @@ print() const
 
   getParentPs()->incDepth();
 
-  const_child_iterator p1 = child_begin();
-  const_child_iterator p2 = child_end  ();
-
-  for ( ; p1 != p2; ++p1)
-    (*p1)->print();
+  for (const auto &child : children())
+    child->print();
 
   getParentPs()->decDepth();
 }
@@ -409,12 +386,9 @@ void
 CPsProcess::
 killChildren()
 {
-  const_child_iterator p1 = child_begin();
-  const_child_iterator p2 = child_end  ();
+  for (auto &child : children()) {
+    child->killChildren();
 
-  for ( ; p1 != p2; ++p1) {
-    (*p1)->killChildren();
-
-    (*p1)->kill();
+    child->kill();
   }
 }

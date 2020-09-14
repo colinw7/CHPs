@@ -18,8 +18,8 @@ struct CPsProcessData {
 
 class CPsProcess : public CComposite<CPsProcess, CPsProcess>, public CChild<CPsProcess> {
  private:
-  typedef CComposite<CPsProcess, CPsProcess> Composite;
-  typedef CChild<CPsProcess>                 ProcessChild;
+  using Composite    = CComposite<CPsProcess, CPsProcess>;
+  using ProcessChild = CChild<CPsProcess>;
 
  public:
   CPsProcess(int pid, int ppid, const std::string &owner,
@@ -97,7 +97,7 @@ class CPs {
   };
 
   struct Field {
-    int         start;
+    int         start { 0 };
     std::string str;
   };
 

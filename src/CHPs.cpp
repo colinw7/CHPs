@@ -3,9 +3,10 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
 
 #define USAGE "\
-CHPs [-me] [-user <user>] [-a|-all] [-head] [-tail] [-h|-help]\n\
+CHPs [-me] [-user <user>] [-a|-all] [-head] [-tail] [-html] [-h|-help]\n\
 \n\
 -a|-all      : Display processes for all users\n\
 -me          : Display processes for current user (default)\n\
@@ -13,7 +14,8 @@ CHPs [-me] [-user <user>] [-a|-all] [-head] [-tail] [-h|-help]\n\
 -head        : Show head\n\
 -tail        : Show tail\n\
 -nocolor     : No Color output\n\
--h|-help     : Display usage\n\
+-html        : HTML output format\n\
+-h|-help     : Display usage\
 "
 
 int
@@ -23,38 +25,41 @@ main(int argc, char **argv)
 
   for (int i = 1; i < argc; ++i) {
     if (argv[i][0] == '-') {
-      if      (strcmp(&argv[i][1], "me") == 0) {
+      std::string arg = &argv[i][1];
+
+      if      (arg == "me") {
         ps.setUser(getenv("USER"));
       }
-      else if (strcmp(&argv[i][1], "user") == 0) {
+      else if (arg == "user") {
         if (i < argc - 1)
           ps.setUser(argv[++i]);
         else
-          fprintf(stderr, "Missing value for %s\n", argv[i]);
+          std::cerr << "Missing value for " << argv[i] << "\n";
       }
-      else if (strcmp(&argv[i][1], "a"  ) == 0 ||
-               strcmp(&argv[i][1], "all") == 0) {
+      else if (arg == "a" || arg == "all") {
         ps.setUser("");
       }
-      else if (strcmp(&argv[i][1], "head") == 0) {
+      else if (arg == "head") {
         ps.setShowHead(true);
       }
-      else if (strcmp(&argv[i][1], "tail") == 0) {
+      else if (arg == "tail") {
         ps.setShowTail(true);
       }
-      else if (strcmp(&argv[i][1], "nocolor") == 0) {
+      else if (arg == "nocolor") {
         ps.setColor(false);
       }
-      else if (strcmp(&argv[i][1], "h"   ) == 0 ||
-               strcmp(&argv[i][1], "help") == 0) {
-        fprintf(stderr, USAGE);
+      else if (arg == "html") {
+        ps.setHtml(true);
+      }
+      else if (arg == "h" || arg == "help") {
+        std::cerr << USAGE << "\n";
         exit(1);
       }
       else
-        fprintf(stderr, "Invalid option %s\n", argv[i]);
+        std::cerr << "Invalid option " << argv[i] << "\n";
     }
     else {
-      fprintf(stderr, "Invalid argument %s\n", argv[i]);
+      std::cerr << "Invalid argument " << argv[i] << "\n";
     }
   }
 

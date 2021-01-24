@@ -109,22 +109,30 @@ class CPs {
 
   int getUserPId() const { return user_pid_; }
 
+  //---
+
   int getDepth() const { return depth_; }
-
-  bool getShowHead() const { return show_head_; }
-  bool getShowTail() const { return show_tail_; }
-
-  bool getColor() const { return color_; }
 
   void incDepth() { ++depth_; }
   void decDepth() { --depth_; }
 
-  void setUser(const std::string &user) { user_ = user; }
+  //---
 
+  bool getShowHead() const { return show_head_; }
   void setShowHead(bool show) { show_head_ = show; }
+
+  bool getShowTail() const { return show_tail_; }
   void setShowTail(bool show) { show_tail_ = show; }
 
+  bool getColor() const { return color_; }
   void setColor(bool color) { color_ = color; }
+
+  bool getHtml() const { return html_; }
+  void setHtml(bool html) { html_ = html; }
+
+  //---
+
+  void setUser(const std::string &user) { user_ = user; }
 
   CPsRootProcess *getRootProcess() const { return root_process_.get(); }
 
@@ -149,6 +157,7 @@ class CPs {
   bool         show_head_ { false };
   bool         show_tail_ { false };
   bool         color_     { true };
+  bool         html_      { false };
   RootProcessP root_process_;
   std::string  ps_command_;
 };

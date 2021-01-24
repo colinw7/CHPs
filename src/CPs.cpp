@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <iostream>
 
 #define COLOR_YELLOW "[33m"
 #define COLOR_GREEN  "[32m"
@@ -230,8 +231,21 @@ printProcesses()
 {
   depth_ = 0;
 
+  if (getHtml()) {
+    std::cout << "<html>\n";
+    std::cout << "<head></head>\n";
+    std::cout << "<body>\n";
+    std::cout << "<pre>\n";
+  }
+
   for (const auto &child : getRootProcess()->children())
     child->print();
+
+  if (getHtml()) {
+    std::cout << "</pre>\n";
+    std::cout << "</body>\n";
+    std::cout << "</html>\n";
+  }
 }
 
 bool
@@ -340,31 +354,61 @@ print() const
     display = false;
 
   if (display) {
-    if (! getParentPs()->getColor()) {
-      if (getParentPs()->getUser() == "")
-        printf("%6d %8s ", getPid(), getOwner().c_str());
-      else
-        printf("%6d ", getPid());
+    if (! getParentPs()->getHtml()) {
+      if (! getParentPs()->getColor()) {
+        if (getParentPs()->getUser() == "")
+          printf("%6d %8s ", getPid(), getOwner().c_str());
+        else
+          printf("%6d ", getPid());
+      }
+      else {
+        if (getParentPs()->getUser() == "")
+          printf("%s%6d%s %s%8s%s ", COLOR_YELLOW, getPid(), COLOR_NONE,
+                 COLOR_GREEN, getOwner().c_str(), COLOR_NONE);
+        else
+          printf("%s%6d%s ", COLOR_YELLOW, getPid(), COLOR_NONE);
+      }
+
+      if (! getParentPs()->getShowHead() && ! getParentPs()->getShowTail()) {
+        for (int i = 0; i < getParentPs()->getDepth(); ++i)
+          printf("  ");
+      }
+
+      printf("%s", getCommand().c_str());
+
+      if (getArgs().size() > 0)
+        printf(" %s", getArgs().c_str());
+
+      printf("\n");
     }
     else {
-      if (getParentPs()->getUser() == "")
-        printf("%s%6d%s %s%8s%s ", COLOR_YELLOW, getPid(), COLOR_NONE,
-               COLOR_GREEN, getOwner().c_str(), COLOR_NONE);
-      else
-        printf("%s%6d%s ", COLOR_YELLOW, getPid(), COLOR_NONE);
+      if (getParentPs()->getUser() == "") {
+        std::cout << "<font color='blue'>";
+        std::cout << getPid();
+        std::cout << "<font color='black'> ";
+
+        std::cout << "<font color='green'>";
+        std::cout << getOwner();
+        std::cout << "<font color='black'> ";
+      }
+      else {
+        std::cout << "<font color='blue'>";
+        std::cout << getPid();
+        std::cout << "<font color='black'> ";
+      }
+
+      if (! getParentPs()->getShowHead() && ! getParentPs()->getShowTail()) {
+        for (int i = 0; i < getParentPs()->getDepth(); ++i)
+          std::cout << "  ";
+      }
+
+      std::cout << getCommand();
+
+      if (getArgs().size() > 0)
+        std::cout << " " << getArgs();
+
+      std::cout << "<br>\n";
     }
-
-    if (! getParentPs()->getShowHead() && ! getParentPs()->getShowTail()) {
-      for (int i = 0; i < getParentPs()->getDepth(); ++i)
-        printf("  ");
-    }
-
-    printf("%s", getCommand().c_str());
-
-    if (getArgs().size() > 0)
-      printf(" %s", getArgs().c_str());
-
-    printf("\n");
   }
 
   getParentPs()->incDepth();

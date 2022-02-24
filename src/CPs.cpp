@@ -1,4 +1,5 @@
 #include <CPs.h>
+#include <CGlob.h>
 #include <CStrUtil.h>
 
 #include <std_os.h>
@@ -130,7 +131,7 @@ processLine(const std::string &line)
   std::vector<Field> fields;
 
   uint i   = 0;
-  uint len = line.size();
+  uint len = uint(line.size());
 
   while (i < len) {
     while (i < len && isspace(line[i]))
@@ -149,9 +150,9 @@ processLine(const std::string &line)
     fields.push_back(field);
   }
 
-  uint num_fields = fields.size();
+  uint num_fields = uint(fields.size());
 
-  int         pid, ppid;
+  long        pid, ppid;
   std::string owner, command, args;
 
 #if defined(OS_SUN)
@@ -181,7 +182,7 @@ processLine(const std::string &line)
   args    = "";
 
   if (num_fields > 3)
-    i = fields[3].start + fields[3].str.size();
+    i = fields[3].start + uint(fields[3].str.size());
   else
     i = len;
 #else
@@ -208,7 +209,7 @@ processLine(const std::string &line)
       args += line[i++];
   }
 
-  auto *process = new CPsProcess(pid, ppid, owner, command, args);
+  auto *process = new CPsProcess(int(pid), int(ppid), owner, command, args);
 
   return process;
 }
@@ -238,14 +239,37 @@ printProcesses()
     std::cout << "<pre>\n";
   }
 
-  for (const auto &child : getRootProcess()->children())
+  const auto &match = getMatch();
+
+  CGlob glob("*" + match + "*");
+
+  for (const auto &child : getRootProcess()->children()) {
+    if (match.size() && ! processMatch(child, glob))
+      continue;
+
     child->print();
+  }
 
   if (getHtml()) {
     std::cout << "</pre>\n";
     std::cout << "</body>\n";
     std::cout << "</html>\n";
   }
+}
+
+bool
+CPs::
+processMatch(CPsProcess *process, const CGlob &glob) const
+{
+  if (glob.compare(process->getCommand()))
+    return true;
+
+  for (const auto &child : process->children()) {
+    if (processMatch(child, glob))
+      return true;
+  }
+
+  return false;
 }
 
 bool

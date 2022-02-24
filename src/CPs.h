@@ -7,6 +7,7 @@
 #include <string>
 
 class CPs;
+class CGlob;
 
 struct CPsProcessData {
   int         pid  { -1 };
@@ -97,7 +98,7 @@ class CPs {
   };
 
   struct Field {
-    int         start { 0 };
+    uint        start { 0 };
     std::string str;
   };
 
@@ -130,6 +131,9 @@ class CPs {
   bool getHtml() const { return html_; }
   void setHtml(bool html) { html_ = html; }
 
+  const std::string &getMatch() const { return match_; }
+  void setMatch(const std::string &s) { match_ = s; }
+
   //---
 
   void setUser(const std::string &user) { user_ = user; }
@@ -139,6 +143,8 @@ class CPs {
   void loadProcesses(bool hier=false);
 
   void printProcesses();
+
+  bool processMatch(CPsProcess *, const CGlob &) const;
 
   bool killProcess(const std::string &name, bool kill_all=false,
                    bool recursive=false, bool force_kill=false);
@@ -158,6 +164,7 @@ class CPs {
   bool         show_tail_ { false };
   bool         color_     { true };
   bool         html_      { false };
+  std::string  match_;
   RootProcessP root_process_;
   std::string  ps_command_;
 };

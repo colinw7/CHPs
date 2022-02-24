@@ -24,13 +24,15 @@ CPPFLAGS = \
 -I. \
 -I$(INC_DIR) \
 -I../../CStrUtil/include \
+-I../../CGlob/include \
 -I../../CUtil/include \
 -I../../COS/include \
 
 LFLAGS = \
 -L$(LIB_DIR) \
+-L../../CGlob/lib \
 -L../../CStrUtil/lib \
--lCStrUtil
+-lCGlob -lCStrUtil
 
 clean:
 	$(RM) -f $(OBJ_DIR)/*.o

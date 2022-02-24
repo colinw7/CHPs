@@ -8,14 +8,15 @@
 #define USAGE "\
 CHPs [-me] [-user <user>] [-a|-all] [-head] [-tail] [-html] [-h|-help]\n\
 \n\
--a|-all      : Display processes for all users\n\
--me          : Display processes for current user (default)\n\
--user <user> : Display processes for user <user>\n\
--head        : Show head\n\
--tail        : Show tail\n\
--nocolor     : No Color output\n\
--html        : HTML output format\n\
--h|-help     : Display usage\
+-a|-all       : Display processes for all users\n\
+-me           : Display processes for current user (default)\n\
+-user <user>  : Display processes for user <user>\n\
+-head         : Show head\n\
+-tail         : Show tail\n\
+-nocolor      : No Color output\n\
+-match <text> : text to match\n\
+-html         : HTML output format\n\
+-h|-help      : Display usage\
 "
 
 int
@@ -47,6 +48,12 @@ main(int argc, char **argv)
       }
       else if (arg == "nocolor") {
         ps.setColor(false);
+      }
+      else if (arg == "match") {
+        if (i < argc - 1)
+          ps.setMatch(argv[++i]);
+        else
+          std::cerr << "Missing value for " << argv[i] << "\n";
       }
       else if (arg == "html") {
         ps.setHtml(true);

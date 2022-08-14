@@ -134,6 +134,9 @@ class CPs {
   const std::string &getMatch() const { return match_; }
   void setMatch(const std::string &s) { match_ = s; }
 
+  const std::string &getNoMatch() const { return nomatch_; }
+  void setNoMatch(const std::string &s) { nomatch_ = s; }
+
   //---
 
   void setUser(const std::string &user) { user_ = user; }
@@ -165,6 +168,7 @@ class CPs {
   bool         color_     { true };
   bool         html_      { false };
   std::string  match_;
+  std::string  nomatch_;
   RootProcessP root_process_;
   std::string  ps_command_;
 };

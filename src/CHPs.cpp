@@ -55,6 +55,12 @@ main(int argc, char **argv)
         else
           std::cerr << "Missing value for " << argv[i] << "\n";
       }
+      else if (arg == "nomatch") {
+        if (i < argc - 1)
+          ps.setNoMatch(argv[++i]);
+        else
+          std::cerr << "Missing value for " << argv[i] << "\n";
+      }
       else if (arg == "html") {
         ps.setHtml(true);
       }

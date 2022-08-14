@@ -239,12 +239,17 @@ printProcesses()
     std::cout << "<pre>\n";
   }
 
-  const auto &match = getMatch();
+  const auto &match   = getMatch();
+  const auto &nomatch = getNoMatch();
 
   CGlob glob("*" + match + "*");
+  CGlob noglob("*" + nomatch + "*");
 
   for (const auto &child : getRootProcess()->children()) {
     if (match.size() && ! processMatch(child, glob))
+      continue;
+
+    if (nomatch.size() && processMatch(child, noglob))
       continue;
 
     child->print();

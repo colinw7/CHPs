@@ -77,7 +77,7 @@ class CPsRootProcess : public CPsProcess {
    CPsProcess(0, 0, "root", "", ""), ps_(ps) {
   }
 
-  CPs *getParentPs() const { return ps_; }
+  CPs *getParentPs() const override { return ps_; }
 
  private:
   CPs *ps_ { nullptr };
